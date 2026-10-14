@@ -7,25 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-14
+
 ### Changed
 
-- Raise the minimum supported Node.js version to 22
+- Raise the minimum supported Node.js version to 22.13.0
 
     The declared `engines.node` range of `>=18` was already inaccurate:
     `commander@15` requires Node `>=22.12.0`, so v1.0.1 could not install or
     run on Node 18 or 20 despite claiming support. This corrects the declared
-    range to match reality rather than removing working functionality. Node 18
-    and 20 are both past end-of-life.
+    range to match reality rather than removing working functionality. The
+    floor is 22.13.0 because the `@inquirer/prompts` 8.x packages require
+    `^22.13.0` on the Node 22 line. Node 18 and 20 are both past end-of-life.
 
-- Update production dependencies: `chalk` 5 to 6, `execa` 9 to 10,
-  `@inquirer/prompts` to 8.6.0, `ora` to 9.4.1
+- Update production dependencies: `chalk` 5 to 6.0.1, `execa` 9 to 10.1.0,
+  `@inquirer/prompts` to 8.7.3, `ora` to 9.4.1
 
     `@inquirer/prompts` 8.5.2 hardens temp-file handling in `external-editor`,
     which backs the external editor flow. No merlin code changes were required:
     only chalk colour helpers are used, and every `execa` call site uses the
     `execa(file, argsArray)` form that both majors support.
 
-- Run CI and release workflows on Node 22 so the supported floor is actually exercised
+- Run CI and release workflows on Node 22 instead of Node 20, which the
+  dependencies no longer support
+
+### Security
+
+- Update development dependencies to resolve 17 security advisories, 15 of
+  them reported as Dependabot alerts (fast-uri, js-yaml, postcss, smol-toml,
+  brace-expansion, vitest, @humanfs/node, source-map-js)
+
+    All advisories affect development tooling only. `npm audit --omit=dev`
+    reports no vulnerabilities, so users of the published package were not
+    exposed.
 
 ## [1.0.1] - 2026-07-05
 
