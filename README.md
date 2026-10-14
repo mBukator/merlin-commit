@@ -1,7 +1,7 @@
 # merlin-commit
 
   <p align="center">
-    <img src=".github/assets/merlin-logo-large.svg" alt="merlin-commit" width="100%"/>
+    <img src=".github/assets/merlin-banner.svg" alt="merlin-commit" width="100%"/>
   </p>
 
 > Interactive CLI for creating [Conventional Commits](https://www.conventionalcommits.org/) with a wizard-themed interface

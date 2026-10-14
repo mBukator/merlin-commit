@@ -4,11 +4,11 @@
 
 ## Requirements
 
-| Requirement | Version                          |
-| ----------- | -------------------------------- |
-| Node.js     | >= 18.0.0                        |
-| npm         | >= 9.0.0 (bundled with Node 18+) |
-| Git         | Any recent version               |
+| Requirement | Version                         |
+| ----------- | ------------------------------- |
+| Node.js     | >= 22.13.0                      |
+| npm         | >= 9.0.0 (bundled with Node.js) |
+| Git         | Any recent version              |
 
 Verify your Node.js version:
 
