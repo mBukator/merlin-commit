@@ -12,5 +12,4 @@ export type {
     CustomThemeConfig,
     ThemeMessageOverrides,
     ThemeMessages,
-    ThemeName,
 } from "./theme.js";
