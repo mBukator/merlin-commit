@@ -39,6 +39,50 @@ describe("validateConfig", () => {
         expect(result.theme).toBeUndefined();
     });
 
+    it("accepts the custom theme value", () => {
+        expect(validateConfig({ theme: "custom" }).theme).toBe("custom");
+    });
+
+    describe("customTheme", () => {
+        it("keeps a valid custom theme with validated messages", () => {
+            const result = validateConfig({
+                customTheme: {
+                    extends: "standard",
+                    messages: { commit: { intro: "Launch", unknown: "x" } },
+                },
+            });
+
+            expect(result.customTheme).toEqual({
+                extends: "standard",
+                messages: { commit: { intro: "Launch" } },
+            });
+        });
+
+        it("defaults messages to empty overrides when missing", () => {
+            const result = validateConfig({ customTheme: { extends: "wizard" } });
+
+            expect(result.customTheme).toEqual({ extends: "wizard", messages: {} });
+        });
+
+        it.each([["dark"], ["custom"], [undefined], [42]])(
+            "rejects a custom theme extending %s",
+            (baseTheme) => {
+                const result = validateConfig({
+                    customTheme: { extends: baseTheme, messages: {} },
+                });
+
+                expect(result.customTheme).toBeUndefined();
+            }
+        );
+
+        it.each([["string"], [null], [42]])(
+            "rejects a non-object custom theme (%s)",
+            (customTheme) => {
+                expect(validateConfig({ customTheme }).customTheme).toBeUndefined();
+            }
+        );
+    });
+
     it("rejects zero and negative maxSubjectLength", () => {
         expect(validateConfig({ maxSubjectLength: 0 })).toEqual({});
         expect(validateConfig({ maxSubjectLength: -5 })).toEqual({});

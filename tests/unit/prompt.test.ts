@@ -91,6 +91,44 @@ describe("promptUser", () => {
             );
         });
 
+        it("keeps emoji decoration for a custom theme on the wizard base", async () => {
+            setupMinimalFlow();
+            const dependencies = createMockDependencies({
+                config: {
+                    ...DEFAULT_CONFIG,
+                    theme: "custom",
+                    customTheme: { extends: "wizard", messages: {} },
+                },
+            });
+
+            await promptUser(dependencies);
+
+            const choices = vi.mocked(select).mock.calls[0][0].choices as Array<{
+                name: string;
+            }>;
+            expect(choices[0].name.startsWith(DEFAULT_CONFIG.types[0].emoji)).toBe(true);
+        });
+
+        it("uses plain labels for a custom theme on the standard base", async () => {
+            setupMinimalFlow();
+            const dependencies = createMockDependencies({
+                config: {
+                    ...DEFAULT_CONFIG,
+                    theme: "custom",
+                    customTheme: { extends: "standard", messages: {} },
+                },
+            });
+
+            await promptUser(dependencies);
+
+            const choices = vi.mocked(select).mock.calls[0][0].choices as Array<{
+                name: string;
+            }>;
+            expect(choices[0].name.startsWith(`${DEFAULT_CONFIG.types[0].value}:`)).toBe(
+                true
+            );
+        });
+
         it("applies character counter transformer to scope", async () => {
             setupMinimalFlow();
             const dependencies = createMockDependencies();

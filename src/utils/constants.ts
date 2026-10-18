@@ -338,4 +338,22 @@ export const DEFAULT_CONFIG: Required<MerlinConfig> = {
     autoAdd: false,
     showCharacterCounter: true,
     theme: "wizard",
+    customTheme: { extends: "wizard", messages: {} },
 };
+
+/**
+ * Parameter names for every template message in ThemeMessages, keyed by dotted path.
+ * Custom themes write these messages as strings with `{name}` placeholders,
+ * and the names listed here map each positional argument to its placeholder.
+ */
+export const TEMPLATE_PARAMETER_NAMES: Readonly<Record<string, readonly string[]>> = {
+    "config.projectFieldAction": ["field"],
+    "errors.commit.tooLong": ["maxCharacters"],
+    "init.overwrite": ["fileName"],
+};
+
+/**
+ * Longest custom theme message accepted from config, in characters.
+ * Longer strings are truncated so a shared config cannot flood the terminal.
+ */
+export const MAX_CUSTOM_MESSAGE_LENGTH_CHARACTERS = 200;

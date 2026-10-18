@@ -9,6 +9,7 @@ import {
     STANDARD_MESSAGES,
     WIZARD_MESSAGES,
 } from "../utils/constants.js";
+import { mergeThemeMessages, resolveBaseTheme } from "../utils/theme.js";
 import { normalizeEmojiSpacing } from "./terminal.js";
 
 const USER_CONFIG_PATH = join(homedir(), ".merlinrc.json");
@@ -101,8 +102,52 @@ export function loadConfig(repoRoot?: string | null): Required<MerlinConfig> {
  */
 export function saveConfig(config: Partial<MerlinConfig>): void {
     const currentConfig = loadUserConfig();
-    const newConfig = { ...DEFAULT_CONFIG, ...currentConfig, ...config };
+    const newConfig = preserveRawCustomTheme(
+        { ...DEFAULT_CONFIG, ...currentConfig, ...config },
+        config,
+        USER_CONFIG_PATH
+    );
     writeFileSync(USER_CONFIG_PATH, `${JSON.stringify(newConfig, null, 4)}\n`);
+}
+
+/**
+ * Reads the unvalidated `customTheme` value from a config file.
+ * Returns undefined when the file is missing, unparseable, or has no customTheme.
+ * Parse errors are already reported by loadUserConfig/loadProjectConfig.
+ */
+function readRawCustomTheme(configPath: string): unknown {
+    if (!existsSync(configPath)) {
+        return undefined;
+    }
+    try {
+        const rawConfig: unknown = JSON.parse(readFileSync(configPath, "utf-8"));
+        return typeof rawConfig === "object" && rawConfig !== null
+            ? (rawConfig as Record<string, unknown>).customTheme
+            : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * Keeps the hand-written `customTheme` from disk when a save does not change it.
+ *
+ * Saves write back the validated config, which would replace a custom theme with
+ * its sanitized form - dropping a whole block over one typo. Other fields are
+ * single values, so only customTheme needs this.
+ */
+function preserveRawCustomTheme(
+    newConfig: Partial<MerlinConfig>,
+    changes: Partial<MerlinConfig>,
+    configPath: string
+): Record<string, unknown> {
+    if (changes.customTheme !== undefined) {
+        return newConfig;
+    }
+    const rawCustomTheme = readRawCustomTheme(configPath);
+    return rawCustomTheme === undefined
+        ? newConfig
+        : { ...newConfig, customTheme: rawCustomTheme };
 }
 
 /**
@@ -129,7 +174,11 @@ export function resetConfig(): void {
 export function saveProjectConfig(config: Partial<MerlinConfig>, repoRoot: string): void {
     const projectConfigPath = join(repoRoot, ".merlinrc.json");
     const currentProjectConfig = loadProjectConfig(repoRoot);
-    const newConfig = { ...currentProjectConfig, ...config };
+    const newConfig = preserveRawCustomTheme(
+        { ...currentProjectConfig, ...config },
+        config,
+        projectConfigPath
+    );
 
     writeFileSync(projectConfigPath, `${JSON.stringify(newConfig, null, 4)}\n`);
 }
@@ -149,10 +198,11 @@ export function removeProjectConfigField(
     const currentProjectConfig = loadProjectConfig(repoRoot);
 
     delete (currentProjectConfig as Record<string, unknown>)[field];
-    writeFileSync(
-        projectConfigPath,
-        `${JSON.stringify(currentProjectConfig, null, 4)}\n`
-    );
+    const newConfig =
+        field === "customTheme"
+            ? currentProjectConfig
+            : preserveRawCustomTheme(currentProjectConfig, {}, projectConfigPath);
+    writeFileSync(projectConfigPath, `${JSON.stringify(newConfig, null, 4)}\n`);
 }
 
 /**
@@ -200,13 +250,24 @@ function normalizeThemeStrings<T>(object: T): T {
  *
  * For the wizard theme, VS16 emoji spacing is normalized at runtime based on
  * terminal detection. Standard theme has no VS16 emojis and skips normalization.
+ * A custom theme is layered over its base and always normalized, since user
+ * strings may contain VS16 emojis. `customTheme` merges like every other field,
+ * so a project-level custom theme replaces the user-level one as a whole.
  *
  * @param repoRoot - Repository root path for project-level config, or null/undefined to skip
  * @returns Message object containing all UI text for prompts, errors, and tips
  */
 export function getMessages(repoRoot?: string | null): ThemeMessages {
     const config = loadConfig(repoRoot);
-    if (config.theme !== "wizard") {
+    const baseTheme = resolveBaseTheme(config);
+    const baseMessages = baseTheme === "wizard" ? WIZARD_MESSAGES : STANDARD_MESSAGES;
+
+    if (config.theme === "custom") {
+        return normalizeThemeStrings(
+            mergeThemeMessages(baseMessages, config.customTheme.messages)
+        );
+    }
+    if (baseTheme !== "wizard") {
         return STANDARD_MESSAGES;
     }
     return normalizeThemeStrings(WIZARD_MESSAGES);

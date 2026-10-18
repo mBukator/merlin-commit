@@ -13,6 +13,7 @@ Both config files are JSON objects at the top level. Every field is optional - o
 ```json
 {
     "theme": "wizard",
+    "customTheme": { "extends": "wizard", "messages": {} },
     "maxSubjectLength": 72,
     "maxScopeLength": 20,
     "editor": "vim",
@@ -32,7 +33,7 @@ Invalid values are silently ignored and the built-in default is used instead. Me
 
 ### `theme`
 
-**Type:** `"wizard"` | `"standard"`  
+**Type:** `"wizard"` | `"standard"` | `"custom"`  
 **Default:** `"wizard"`
 
 Controls the UI theme used throughout the prompt sequence.
@@ -41,6 +42,7 @@ Controls the UI theme used throughout the prompt sequence.
 | ------------ | --------------------------------------------------------------------------------------- |
 | `"wizard"`   | Magical themed prompts with emoji, color, and thematic vocabulary.                      |
 | `"standard"` | Minimal prompts with plain text. Better for low-color terminals or accessibility needs. |
+| `"custom"`   | Your messages from [`customTheme`](#customtheme), layered over its base theme.          |
 
 **Example:**
 
@@ -51,6 +53,41 @@ Controls the UI theme used throughout the prompt sequence.
 ```
 
 See [Themes](../usage/themes.md) for a full comparison including exact prompt text for each theme.
+
+---
+
+### `customTheme`
+
+**Type:** `{ extends: "wizard" | "standard"; messages: object }`  
+**Default:** `{ "extends": "wizard", "messages": {} }`
+
+Messages used when `theme` is `"custom"`. Only the overridden messages need to be listed - every other message comes from the `extends` theme, which also decides decoration (emoji columns and menu icons).
+
+| Field      | Type                       | Required | Description                                                       |
+| ---------- | -------------------------- | -------- | ----------------------------------------------------------------- |
+| `extends`  | `"wizard"` \| `"standard"` | Yes      | Base theme for fallback messages and decoration                   |
+| `messages` | `object`                   | No       | Nested message overrides. Keys mirror the built-in theme messages |
+
+Template messages (`config.projectFieldAction`, `errors.commit.tooLong`, `init.overwrite`) are written with `{field}`, `{maxCharacters}` and `{fileName}` placeholders.
+
+**Example:**
+
+```json
+{
+    "theme": "custom",
+    "customTheme": {
+        "extends": "standard",
+        "messages": {
+            "commit": { "intro": "Ready to ship" },
+            "errors": { "commit": { "tooLong": "Max {maxCharacters} characters" } }
+        }
+    }
+}
+```
+
+Like every field, `customTheme` is replaced as a whole by a higher-priority tier: a project `customTheme` replaces the user one rather than merging with it.
+
+See [Custom Themes](../usage/themes.md#custom-themes) for placeholders, limits and the full key reference.
 
 ---
 
@@ -268,15 +305,16 @@ To extend the built-ins, include all 11 default types in your array plus your ad
 
 ## Validation Rules
 
-| Field                  | Validation                               | On invalid value                                                |
-| ---------------------- | ---------------------------------------- | --------------------------------------------------------------- |
-| `theme`                | Must be `"wizard"` or `"standard"`       | Ignored, falls back to default                                  |
-| `maxSubjectLength`     | Must be a number greater than 0          | Ignored, falls back to default                                  |
-| `maxScopeLength`       | Must be a number greater than 0          | Ignored, falls back to default                                  |
-| `editor`               | Must be a non-empty string               | Ignored, falls back to default                                  |
-| `autoAdd`              | Must be a boolean                        | Ignored, falls back to default                                  |
-| `showCharacterCounter` | Must be a boolean                        | Ignored, falls back to default                                  |
-| `types`                | Array, each entry filtered by type shape | Invalid entries filtered out; empty array falls back to default |
+| Field                  | Validation                                                                                  | On invalid value                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                | Must be `"wizard"`, `"standard"` or `"custom"`                                              | Ignored, falls back to default                                                                                                                                    |
+| `customTheme`          | Object with `extends` of `"wizard"` or `"standard"`; messages must be strings at known keys | Whole object ignored if `extends` is invalid; unknown keys and non-strings dropped; control and bidi-override characters stripped; messages cut to 200 characters |
+| `maxSubjectLength`     | Must be a number greater than 0                                                             | Ignored, falls back to default                                                                                                                                    |
+| `maxScopeLength`       | Must be a number greater than 0                                                             | Ignored, falls back to default                                                                                                                                    |
+| `editor`               | Must be a non-empty string                                                                  | Ignored, falls back to default                                                                                                                                    |
+| `autoAdd`              | Must be a boolean                                                                           | Ignored, falls back to default                                                                                                                                    |
+| `showCharacterCounter` | Must be a boolean                                                                           | Ignored, falls back to default                                                                                                                                    |
+| `types`                | Array, each entry filtered by type shape                                                    | Invalid entries filtered out; empty array falls back to default                                                                                                   |
 
 Unknown fields are silently ignored.
 
@@ -286,8 +324,14 @@ Unknown fields are silently ignored.
 
 ```json
 {
-    // UI theme: "wizard" (default) or "standard"
+    // UI theme: "wizard" (default), "standard" or "custom"
     "theme": "wizard",
+
+    // Messages for theme "custom", layered over the "extends" theme
+    "customTheme": {
+        "extends": "wizard",
+        "messages": { "commit": { "intro": "🚀 Ready to launch your commit!" } }
+    },
 
     // Subject line character limit (10-200, default 72)
     "maxSubjectLength": 72,

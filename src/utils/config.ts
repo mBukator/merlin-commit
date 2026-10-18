@@ -1,4 +1,29 @@
-import type { CommitType, MerlinConfig } from "../types/index.js";
+import type {
+    BaseThemeName,
+    CommitType,
+    CustomThemeConfig,
+    MerlinConfig,
+} from "../types/index.js";
+import { STANDARD_MESSAGES } from "./constants.js";
+import { validateThemeOverrides } from "./theme.js";
+
+function isBaseThemeName(value: unknown): value is BaseThemeName {
+    return value === "wizard" || value === "standard";
+}
+
+/**
+ * Validates a custom theme object. Requires a valid base theme in `extends`;
+ * messages are filtered down to known, sanitized strings.
+ */
+function validateCustomTheme(customTheme: unknown): CustomThemeConfig | undefined {
+    if (typeof customTheme !== "object" || customTheme === null) return undefined;
+    const rawTheme = customTheme as Record<string, unknown>;
+    if (!isBaseThemeName(rawTheme.extends)) return undefined;
+    return {
+        extends: rawTheme.extends,
+        messages: validateThemeOverrides(rawTheme.messages, STANDARD_MESSAGES),
+    };
+}
 
 /**
  * Validates a single commit type object.
@@ -60,8 +85,14 @@ export function validateConfig(userConfig: unknown): Partial<MerlinConfig> {
     }
 
     // Validate theme
-    if (config.theme === "wizard" || config.theme === "standard") {
+    if (isBaseThemeName(config.theme) || config.theme === "custom") {
         validated.theme = config.theme;
+    }
+
+    // Validate customTheme
+    const customTheme = validateCustomTheme(config.customTheme);
+    if (customTheme) {
+        validated.customTheme = customTheme;
     }
 
     return validated;

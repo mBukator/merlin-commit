@@ -8,6 +8,7 @@ import {
     VALUE_COLUMN_WIDTH,
     VARIATION_SELECTOR,
 } from "../utils/constants.js";
+import { resolveBaseTheme } from "../utils/theme.js";
 import type { CommitEditorContext } from "./editor-wrapper.js";
 import type { StagedFile, StagingCandidate } from "./git.js";
 import { isWideEmojiTerminal } from "./terminal.js";
@@ -61,7 +62,7 @@ export async function promptUser(
     };
 
     // Prompt for commit type
-    const isWizardTheme = config.theme === "wizard";
+    const isWizardTheme = resolveBaseTheme(config) === "wizard";
     answers.type = await select({
         message: messages.prompts.type,
         choices: config.types.map((type) => {
