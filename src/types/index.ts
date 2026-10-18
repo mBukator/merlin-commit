@@ -7,4 +7,10 @@ export type {
     MerlinConfig,
 } from "./config.js";
 export type { InitOptions } from "./init.js";
-export type { ThemeMessages } from "./theme.js";
+export type {
+    BaseThemeName,
+    CustomThemeConfig,
+    ThemeMessageOverrides,
+    ThemeMessages,
+    ThemeName,
+} from "./theme.js";

@@ -115,6 +115,35 @@ describe("config-loader", () => {
             expect(parsed.theme).toBe("standard");
             expect(parsed.maxSubjectLength).toBe(50);
         });
+
+        it("keeps a hand-written customTheme that fails validation", () => {
+            const rawCustomTheme = {
+                extends: "Wizard",
+                messages: { commit: { intro: "Launch", typo: "kept" } },
+            };
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(readFileSync).mockReturnValue(
+                JSON.stringify({ theme: "standard", customTheme: rawCustomTheme })
+            );
+
+            saveConfig({ theme: "custom" });
+
+            const writtenContent = vi.mocked(writeFileSync).mock.calls[0][1] as string;
+            expect(JSON.parse(writtenContent).customTheme).toEqual(rawCustomTheme);
+        });
+
+        it("writes customTheme when the save changes it", () => {
+            const newCustomTheme = { extends: "standard" as const, messages: {} };
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(readFileSync).mockReturnValue(
+                JSON.stringify({ customTheme: { extends: "wizard", messages: {} } })
+            );
+
+            saveConfig({ customTheme: newCustomTheme });
+
+            const writtenContent = vi.mocked(writeFileSync).mock.calls[0][1] as string;
+            expect(JSON.parse(writtenContent).customTheme).toEqual(newCustomTheme);
+        });
     });
 
     describe("resetConfig", () => {
@@ -362,6 +391,19 @@ describe("config-loader", () => {
             expect(parsed.maxSubjectLength).toBe(50);
         });
 
+        it("keeps the raw project customTheme when saving another field", () => {
+            const rawCustomTheme = { extends: "standard", messages: { bogus: "kept" } };
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(readFileSync).mockReturnValue(
+                JSON.stringify({ customTheme: rawCustomTheme })
+            );
+
+            saveProjectConfig({ maxSubjectLength: 50 }, repoRoot);
+
+            const writtenContent = vi.mocked(writeFileSync).mock.calls[0][1] as string;
+            expect(JSON.parse(writtenContent).customTheme).toEqual(rawCustomTheme);
+        });
+
         it("writes to the correct path with trailing newline", () => {
             vi.mocked(existsSync).mockReturnValue(false);
 
@@ -410,6 +452,34 @@ describe("config-loader", () => {
 
             expect(parsed.theme).toBe("wizard");
             expect(parsed.maxSubjectLength).toBeUndefined();
+        });
+
+        it("keeps the raw customTheme when removing another field", () => {
+            const rawCustomTheme = { extends: "Wizard", messages: {} };
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(readFileSync).mockReturnValue(
+                JSON.stringify({ theme: "custom", customTheme: rawCustomTheme })
+            );
+
+            removeProjectConfigField("theme", repoRoot);
+
+            const writtenContent = vi.mocked(writeFileSync).mock.calls[0][1] as string;
+            expect(JSON.parse(writtenContent)).toEqual({ customTheme: rawCustomTheme });
+        });
+
+        it("removes customTheme when it is the field being removed", () => {
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(readFileSync).mockReturnValue(
+                JSON.stringify({
+                    theme: "custom",
+                    customTheme: { extends: "wizard", messages: {} },
+                })
+            );
+
+            removeProjectConfigField("customTheme", repoRoot);
+
+            const writtenContent = vi.mocked(writeFileSync).mock.calls[0][1] as string;
+            expect(JSON.parse(writtenContent)).toEqual({ theme: "custom" });
         });
 
         it("writes to the correct path with trailing newline", () => {
@@ -516,6 +586,88 @@ describe("config-loader", () => {
             const messages = getMessages();
 
             expect(messages).toBe(STANDARD_MESSAGES);
+        });
+
+        describe("when theme is custom", () => {
+            it.each([
+                ["wizard", WIZARD_MESSAGES],
+                ["standard", STANDARD_MESSAGES],
+            ] as const)(
+                "layers overrides over the %s base",
+                (baseTheme, baseMessages) => {
+                    vi.mocked(existsSync).mockReturnValue(true);
+                    vi.mocked(readFileSync).mockReturnValue(
+                        JSON.stringify({
+                            theme: "custom",
+                            customTheme: {
+                                extends: baseTheme,
+                                messages: { commit: { intro: "Launch" } },
+                            },
+                        })
+                    );
+
+                    const messages = getMessages();
+
+                    expect(messages.commit.intro).toBe("Launch");
+                    expect(messages.commit.exit).toBe(baseMessages.commit.exit);
+                    expect(messages.prompts).toEqual(baseMessages.prompts);
+                }
+            );
+
+            it("renders custom template messages", () => {
+                vi.mocked(existsSync).mockReturnValue(true);
+                vi.mocked(readFileSync).mockReturnValue(
+                    JSON.stringify({
+                        theme: "custom",
+                        customTheme: {
+                            extends: "standard",
+                            messages: {
+                                errors: { commit: { tooLong: "Max {maxCharacters}" } },
+                            },
+                        },
+                    })
+                );
+
+                const messages = getMessages();
+
+                expect(messages.errors.commit.tooLong(50)).toBe("Max 50");
+            });
+
+            it("falls back to the wizard base when customTheme is missing", () => {
+                vi.mocked(existsSync).mockReturnValue(true);
+                vi.mocked(readFileSync).mockReturnValue(
+                    JSON.stringify({ theme: "custom" })
+                );
+
+                const messages = getMessages();
+
+                expect(messages).toEqual(WIZARD_MESSAGES);
+            });
+
+            it("uses the project customTheme instead of the user one", () => {
+                vi.mocked(existsSync).mockReturnValue(true);
+                vi.mocked(readFileSync).mockImplementation((filePath) =>
+                    filePath === USER_CONFIG_PATH
+                        ? JSON.stringify({
+                              theme: "custom",
+                              customTheme: {
+                                  extends: "wizard",
+                                  messages: { commit: { intro: "User", exit: "Bye" } },
+                              },
+                          })
+                        : JSON.stringify({
+                              customTheme: {
+                                  extends: "standard",
+                                  messages: { commit: { intro: "Project" } },
+                              },
+                          })
+                );
+
+                const messages = getMessages("/mock/repo");
+
+                expect(messages.commit.intro).toBe("Project");
+                expect(messages.commit.exit).toBe(STANDARD_MESSAGES.commit.exit);
+            });
         });
     });
 });

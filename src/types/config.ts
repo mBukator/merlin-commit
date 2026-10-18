@@ -1,4 +1,5 @@
 import type { CommitType } from "./commit.js";
+import type { CustomThemeConfig, ThemeName } from "./theme.js";
 
 /**
  * Configuration options for customizing Merlin's behavior.
@@ -45,9 +46,19 @@ export type MerlinConfig = {
      * Visual theme for the commit interface.
      * - "wizard": Guided experience with themed messages and tips
      * - "standard": Minimalist interface with simple prompts
+     * - "custom": Messages from `customTheme` layered over its base theme
      * @default "wizard"
      */
-    theme?: "wizard" | "standard";
+    theme?: ThemeName;
+
+    /**
+     * User-defined messages used when `theme` is "custom".
+     * Only the overridden messages need to be listed - the rest come from `extends`.
+     * @default { extends: "wizard", messages: {} }
+     * @example { extends: "wizard", messages: { commit: { intro: "🚀 Ready to launch" } } }
+     */
+    customTheme?: CustomThemeConfig;
+
     /**
      * Show real-time character counter on subject and scope inputs.
      * @default true
@@ -87,7 +98,8 @@ export type ConfigMenuAction =
 
 /**
  * Configurable fields that can appear in the project config menu.
- * Excludes 'types' since custom commit types are not yet user-configurable.
+ * Excludes 'types' since custom commit types are not yet user-configurable,
+ * and 'customTheme' since theme messages are edited in .merlinrc.json directly.
  */
 export type ConfigurableField =
     | "theme"

@@ -341,6 +341,44 @@ describe("configCommand", () => {
             expect(choices).toContainEqual(
                 expect.objectContaining({ value: "standard" })
             );
+            expect(choices).toContainEqual(expect.objectContaining({ value: "custom" }));
+        });
+
+        it("keeps emoji menu prefixes for a custom theme on the wizard base", async () => {
+            vi.mocked(loadConfig).mockReturnValue({
+                ...DEFAULT_CONFIG,
+                theme: "custom",
+                customTheme: { extends: "wizard", messages: {} },
+            });
+            vi.mocked(select).mockResolvedValueOnce("user").mockResolvedValueOnce("exit");
+
+            await configCommand({});
+
+            // calls[0] = scope, calls[1] = menu
+            const menuChoices = vi.mocked(select).mock.calls[1][0].choices as Array<{
+                value?: string;
+                name?: string;
+            }>;
+            const themeChoice = menuChoices.find((choice) => choice.value === "theme");
+            expect(themeChoice?.name).toContain("🎨");
+        });
+
+        it("uses plain menu prefixes for a custom theme on the standard base", async () => {
+            vi.mocked(loadConfig).mockReturnValue({
+                ...DEFAULT_CONFIG,
+                theme: "custom",
+                customTheme: { extends: "standard", messages: {} },
+            });
+            vi.mocked(select).mockResolvedValueOnce("user").mockResolvedValueOnce("exit");
+
+            await configCommand({});
+
+            const menuChoices = vi.mocked(select).mock.calls[1][0].choices as Array<{
+                value?: string;
+                name?: string;
+            }>;
+            const themeChoice = menuChoices.find((choice) => choice.value === "theme");
+            expect(themeChoice?.name?.startsWith("•")).toBe(true);
         });
     });
 

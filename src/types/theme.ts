@@ -352,3 +352,40 @@ export type ThemeMessages = {
         creatingProjectConfig: string;
     };
 };
+
+/**
+ * Built-in themes that a custom theme can extend.
+ * The base also decides decoration (emoji layout in pickers and menus).
+ */
+export type BaseThemeName = "wizard" | "standard";
+
+/**
+ * Every value accepted by the `theme` config field.
+ */
+export type ThemeName = BaseThemeName | "custom";
+
+/**
+ * Partial, JSON-friendly version of ThemeMessages used by custom themes.
+ * Every key is optional, and template functions become strings with
+ * `{placeholder}` tokens (e.g. "Too long - max {maxCharacters}").
+ */
+export type ThemeMessageOverrides = {
+    [Key in keyof ThemeMessages]?: MessageOverrideNode<ThemeMessages[Key]>;
+};
+
+type MessageOverrideNode<Node> = Node extends string
+    ? string
+    : Node extends (...parameters: never[]) => string
+      ? string
+      : { [Key in keyof Node]?: MessageOverrideNode<Node[Key]> };
+
+/**
+ * User-defined theme: a base theme plus the messages that replace its text.
+ */
+export type CustomThemeConfig = {
+    /** Built-in theme that supplies every message not overridden. */
+    extends: BaseThemeName;
+
+    /** Messages that replace the base theme's text. */
+    messages: ThemeMessageOverrides;
+};
