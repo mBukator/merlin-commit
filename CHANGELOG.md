@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-18
+
+### Added
+
+- Custom themes via `"theme": "custom"` and a `customTheme` block in the user
+  or project `.merlinrc.json`
+
+    `customTheme` takes `extends` (`"wizard"` or `"standard"`) and a
+    `messages` object. Only the listed messages are overridden; everything
+    else falls back to the base theme, which also decides decoration such as
+    emoji columns and menu icons. The three template messages accept
+    `{field}`, `{maxCharacters}` and `{fileName}` placeholders, filled by
+    plain string substitution and never evaluated.
+
+- Validation and sanitization for custom theme messages
+
+    Overrides are checked against the built-in theme shape, so unknown keys
+    are dropped. C0 and C1 control characters and bidirectional override
+    characters are stripped, and each message is capped at 200 code points.
+
+- `custom` option in the `merlin config` theme picker, and the active
+  `customTheme` in `merlin config --show` output
+
+- Custom theme documentation: a Custom Themes section and a full message key
+  reference in `docs/usage/themes.md`, plus `customTheme` entries in
+  `docs/reference/config-schema.md` and `docs/reference/configuration.md`
+
+### Changed
+
+- `DEFAULT_CONFIG` now includes an empty `customTheme` block
+
+    The next time `merlin config` saves `~/.merlinrc.json`, it writes a
+    starter `"customTheme": { "extends": "wizard", "messages": {} }` entry.
+    The block has no effect unless `theme` is set to `"custom"`. A
+    hand-written `customTheme` is kept exactly as written when saving from
+    `merlin config`.
+
 ## [1.0.2] - 2026-10-14
 
 ### Changed
