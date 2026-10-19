@@ -6,6 +6,7 @@ import {
     COMMIT_TYPES,
     DEFAULT_CONFIG,
     STANDARD_MESSAGES,
+    TEMPLATE_PARAMETER_NAMES,
     WIZARD_MESSAGES,
 } from "../../src/utils/constants.js";
 
@@ -181,5 +182,28 @@ describe("DEFAULT_CONFIG", () => {
         expect(DEFAULT_CONFIG.autoAdd).toBe(false);
         expect(DEFAULT_CONFIG.theme).toBe("wizard");
         expect(DEFAULT_CONFIG.types).toBe(COMMIT_TYPES);
+        expect(DEFAULT_CONFIG.customTheme).toEqual({ extends: "wizard", messages: {} });
+    });
+});
+
+describe("TEMPLATE_PARAMETER_NAMES", () => {
+    function collectFunctionPaths(messageTree: object, pathPrefix = ""): string[] {
+        return Object.entries(messageTree).flatMap(([key, value]) => {
+            const path = pathPrefix ? `${pathPrefix}.${key}` : key;
+            if (typeof value === "function") return [path];
+            if (typeof value === "object" && value !== null) {
+                return collectFunctionPaths(value, path);
+            }
+            return [];
+        });
+    }
+
+    it.each([
+        ["WIZARD_MESSAGES", WIZARD_MESSAGES],
+        ["STANDARD_MESSAGES", STANDARD_MESSAGES],
+    ])("lists exactly the template paths in %s", (_, messages) => {
+        const templatePaths = collectFunctionPaths(messages).sort();
+
+        expect(Object.keys(TEMPLATE_PARAMETER_NAMES).sort()).toEqual(templatePaths);
     });
 });

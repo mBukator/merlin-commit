@@ -1,6 +1,6 @@
 # Themes
 
-Merlin Commit ships with two UI themes. Both produce identical commit messages - the theme only affects the prompt text and visual decoration.
+Merlin Commit ships with two UI themes, and you can build a custom theme on top of either one. Every theme produces identical commit messages - the theme only affects the prompt text and visual decoration.
 
 ---
 
@@ -124,6 +124,153 @@ Edit `~/.merlinrc.json` (user, applies everywhere) or `.merlinrc.json` (project,
 
 The theme takes effect immediately - no restart needed.
 
+---
+
+## Custom Themes
+
+A custom theme takes one of the built-in themes as its base and replaces only the messages you list. Everything you leave out comes from the base theme, so new messages added in later Merlin versions never break your theme.
+
+```json
+{
+    "theme": "custom",
+    "customTheme": {
+        "extends": "wizard",
+        "messages": {
+            "commit": { "intro": "🚀 Ready to launch your commit!" },
+            "prompts": {
+                "type": "🎯 Select mission type:",
+                "confirm": "🛰️ Launch this commit?"
+            },
+            "errors": {
+                "commit": {
+                    "tooLong": "Payload too heavy - max {maxCharacters} characters"
+                }
+            }
+        }
+    }
+}
+```
+
+| Field                  | Description                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `theme`                | Set to `"custom"` to use `customTheme`. Other values ignore `customTheme`.                                 |
+| `customTheme.extends`  | `"wizard"` or `"standard"`. Supplies every message you don't override, and decides decoration (see below). |
+| `customTheme.messages` | Nested object of messages to replace. Keys mirror the reference table below.                               |
+
+You can also pick the theme from the menu: `merlin config` → Theme → `custom`. The messages themselves are edited in `.merlinrc.json`.
+
+### Decoration follows the base
+
+`extends` decides more than the fallback text. With `"wizard"` as the base, the type picker shows emoji columns and the config menu shows emoji icons. With `"standard"`, both use plain labels. Your own messages can contain any emoji either way.
+
+### Template messages
+
+Three messages take a value at runtime. Write them as strings with `{placeholder}` tokens:
+
+| Key                         | Placeholder       | Example                                     |
+| --------------------------- | ----------------- | ------------------------------------------- |
+| `config.projectFieldAction` | `{field}`         | `"What should happen to {field}?"`          |
+| `errors.commit.tooLong`     | `{maxCharacters}` | `"Too long - max {maxCharacters}"`          |
+| `init.overwrite`            | `{fileName}`      | `"Already exists. Overwrite? ({fileName})"` |
+
+- `init.overwrite` is sometimes shown without a file name. The placeholder then renders as empty, and parentheses left empty are removed, so the example above becomes `Already exists. Overwrite?`.
+- A placeholder Merlin doesn't know (for example a typo like `{maxChars}`) is shown exactly as typed, so the mistake is easy to spot.
+- Placeholders are plain text substitution. Nothing in a theme is ever run as code.
+
+### Validation and limits
+
+A custom theme is checked when the config loads. Invalid parts are dropped silently, the same way as other config fields:
+
+- Keys that don't exist in the reference table are ignored.
+- Values must be strings. Numbers, arrays and objects in place of a message are ignored.
+- Control characters (including the escape characters used for terminal colour and cursor codes) and right-to-left override characters are stripped, so a shared config can't send commands to your terminal or disguise prompt text.
+- Messages are cut to 200 characters (counted so an emoji is never split in half).
+- If the `customTheme` in a file is invalid (for example `extends` isn't `"wizard"` or `"standard"`), that file's `customTheme` is ignored. Merlin then uses the `customTheme` from the next config level down - project, then user - or, if none is valid, the plain wizard theme.
+- Saving settings from `merlin config` never rewrites your `customTheme` block, so a typo in it is left for you to fix rather than silently dropped from the file.
+
+### Sharing a theme with your team
+
+Put `theme` and `customTheme` in the project `.merlinrc.json` and commit it. Project config replaces user config field by field, so a project `customTheme` replaces your personal one as a whole - the two are not merged message by message.
+
+### Message key reference
+
+Every key a custom theme can override, with the standard theme's text. Template placeholders are shown in braces.
+
+| Key                               | Standard text                                                |
+| --------------------------------- | ------------------------------------------------------------ |
+| `commit.intro`                    | Ready to create a commit                                     |
+| `commit.exit`                     | Commit complete                                              |
+| `commit.dryRunExit`               | Dry run complete - no commit was created.                    |
+| `commit.previewHeader`            | Commit Preview:                                              |
+| `config.intro`                    | Configuration settings                                       |
+| `config.exit`                     | Configuration closed                                         |
+| `config.scopeSelector`            | Edit configuration scope:                                    |
+| `config.scopeUser`                | User config (applies to all repos - ~/.merlinrc.json)        |
+| `config.scopeProject`             | Project config (applies to this repo - .merlinrc.json)       |
+| `config.noProjectConfig`          | No project config found.                                     |
+| `config.createProjectConfig`      | Create .merlinrc.json for this repo?                         |
+| `config.projectConfigCreated`     | Created .merlinrc.json                                       |
+| `config.projectFieldAction`       | Action for {field}:                                          |
+| `config.back`                     | Returning to scope selection...                              |
+| `checking.repo`                   | Checking git repository                                      |
+| `checking.staged`                 | Checking staged changes                                      |
+| `checking.unstaged`               | Checking unstaged files                                      |
+| `checking.autoAdd`                | Staging selected files...                                    |
+| `prompts.type`                    | Select the type of change:                                   |
+| `prompts.scope`                   | Scope (optional):                                            |
+| `prompts.subject`                 | Short description:                                           |
+| `prompts.body`                    | Add a detailed description?                                  |
+| `prompts.breaking`                | Are there any breaking changes?                              |
+| `prompts.issues`                  | Reference any issues? (e.g., fixes #123)                     |
+| `prompts.confirm`                 | Create this commit?                                          |
+| `prompts.selectFiles`             | Select files to stage:                                       |
+| `success.commit.created`          | Commit created successfully                                  |
+| `success.commit.amended`          | Commit amended successfully                                  |
+| `success.commit.dryRun`           | Preview mode - no commit created                             |
+| `success.config.saved`            | Configuration updated                                        |
+| `success.init.completed`          | Setup complete                                               |
+| `errors.notRepo`                  | Not a git repository                                         |
+| `errors.commit.noStaged`          | No staged changes found                                      |
+| `errors.commit.required`          | This field is required                                       |
+| `errors.commit.tooLong`           | Text exceeds maximum length (max {maxCharacters} characters) |
+| `errors.commit.malformed`         | Invalid format                                               |
+| `errors.commit.commitFailed`      | Failed to create commit                                      |
+| `errors.commit.editorFailed`      | Editor exited with error                                     |
+| `errors.init.noPackageJson`       | No package.json found                                        |
+| `errors.init.installFailed`       | Failed to install dependencies                               |
+| `errors.init.huskyFailed`         | Failed to initialize husky                                   |
+| `errors.init.hookFailed`          | Failed to create commit-msg hook                             |
+| `errors.init.configFailed`        | Failed to create commitlint config                           |
+| `errors.init.aliasFailed`         | Failed to create git alias                                   |
+| `warnings.cancel`                 | Commit cancelled                                             |
+| `warnings.commit.noVerify`        | Skipping git hooks (--no-verify)                             |
+| `warnings.config.resetConfig`     | This will reset all configuration to defaults                |
+| `warnings.config.noProjectConfig` | No git repository detected - project config is not available |
+| `warnings.init.existingSetup`     | Existing setup detected:                                     |
+| `warnings.init.aliasExists`       | Git alias 'merlin' already exists                            |
+| `tips.commit.gitAdd`              | Use "git add <file>" to stage changes                        |
+| `tips.init.runGitInit`            | Run "git init" to initialize a repository                    |
+| `tips.init.runNpmInit`            | Run "npm init" to create a package.json                      |
+| `tips.init.manualInstall`         | Install manually: npm install -D                             |
+| `tips.init.nextSteps`             | Setup complete! Next steps:                                  |
+| `init.intro`                      | Setting up conventional commits for your repository          |
+| `init.checkingPackageJson`        | Checking for package.json                                    |
+| `init.installDeps`                | Install husky and commitlint dependencies?                   |
+| `init.installingDeps`             | Installing dependencies...                                   |
+| `init.initializingHusky`          | Initializing husky...                                        |
+| `init.creatingHook`               | Creating commit-msg hook...                                  |
+| `init.creatingCommitlint`         | Creating commitlint config...                                |
+| `init.setupAlias`                 | Setup 'git merlin' alias?                                    |
+| `init.aliasScope`                 | Select alias scope:                                          |
+| `init.creatingAlias`              | Creating git alias...                                        |
+| `init.skipExisting`               | Skipping existing file:                                      |
+| `init.overwrite`                  | File already exists. Overwrite? ({fileName})                 |
+| `init.aliasScopeGlobal`           | Global (all repositories)                                    |
+| `init.aliasScopeLocal`            | Local (this repository only)                                 |
+| `init.createProjectConfig`        | Create project config (.merlinrc.json) for team sharing?     |
+| `init.creatingProjectConfig`      | Creating project config...                                   |
+| `init.exit`                       | Repository setup complete.                                   |
+
 <p align="center">
   <img src="../../.github/assets/gif-03-theme-switch.gif" alt="switching themes" width="100%" />
 </p>
@@ -179,5 +326,6 @@ Color output requires a terminal that supports ANSI escape codes. Colors are not
 ## Related
 
 - [Glossary](../GLOSSARY.md) - Complete wizard-theme vocabulary reference
+- [Config Schema](../reference/config-schema.md#customtheme) - `customTheme` field reference
 - [Configuration](../reference/configuration.md) - Setting a default theme and other options
 - [CLI Reference](../reference/cli-reference.md) - The `merlin config` command

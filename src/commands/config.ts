@@ -27,6 +27,7 @@ import type {
     ThemeMessages,
 } from "../types/index.js";
 import { colors, DEFAULT_CONFIG } from "../utils/constants.js";
+import { resolveBaseTheme } from "../utils/theme.js";
 import { createNonEmptyValidator, createRangeValidator } from "../utils/validators.js";
 
 type SaveFn = (config: Partial<MerlinConfig>) => void;
@@ -81,6 +82,7 @@ const CONFIGURE_PROMPTS = {
     theme: "Select theme:",
     themeWizardLabel: "wizard   - Magical experience with themed messages",
     themeStandardLabel: "standard - Minimalist, professional interface",
+    themeCustomLabel: "custom   - Your messages from customTheme in .merlinrc.json",
     maxSubjectLength: "Maximum subject line length (10-200):",
     maxScopeLength: "Maximum scope length (5-50):",
     editor: "External editor command:",
@@ -177,7 +179,7 @@ function formatFieldChoice(
     currentValue: string | number | boolean,
     config: Required<MerlinConfig>
 ): MenuChoice {
-    const isWizardTheme = config.theme === "wizard";
+    const isWizardTheme = resolveBaseTheme(config) === "wizard";
     const prefix = isWizardTheme
         ? FIELD_EMOJI_PREFIXES.wizard[field]
         : FIELD_EMOJI_PREFIXES.standard[field];
@@ -198,7 +200,7 @@ function formatFieldChoiceNoValue(
     field: ConfigurableField,
     config: Required<MerlinConfig>
 ): MenuChoice {
-    const isWizardTheme = config.theme === "wizard";
+    const isWizardTheme = resolveBaseTheme(config) === "wizard";
     const prefix = isWizardTheme
         ? FIELD_EMOJI_PREFIXES.wizard[field]
         : FIELD_EMOJI_PREFIXES.standard[field];
@@ -218,7 +220,7 @@ function formatActionChoice(
     action: "show" | "reset" | "syncCommitlint" | "back" | "exit",
     config: Required<MerlinConfig>
 ): MenuChoice {
-    const isWizardTheme = config.theme === "wizard";
+    const isWizardTheme = resolveBaseTheme(config) === "wizard";
     const prefixMap = isWizardTheme
         ? FIELD_EMOJI_PREFIXES.wizard
         : FIELD_EMOJI_PREFIXES.standard;
@@ -275,7 +277,7 @@ function buildUserMenuChoices(
 }
 
 /**
- * Configure the UI theme (wizard or standard).
+ * Configure the UI theme (wizard, standard, or custom).
  */
 async function configureTheme(
     config: Required<MerlinConfig>,
@@ -293,6 +295,11 @@ async function configureTheme(
                 value: "standard" as const,
                 name: CONFIGURE_PROMPTS.themeStandardLabel,
                 short: "standard",
+            },
+            {
+                value: "custom" as const,
+                name: CONFIGURE_PROMPTS.themeCustomLabel,
+                short: "custom",
             },
         ],
         default: config.theme,
@@ -400,6 +407,7 @@ async function showConfig(): Promise<void> {
 
     const displayConfig = {
         theme: config.theme,
+        ...(config.theme === "custom" && { customTheme: config.customTheme }),
         maxSubjectLength: config.maxSubjectLength,
         maxScopeLength: config.maxScopeLength,
         editor: config.editor,

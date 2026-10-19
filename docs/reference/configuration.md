@@ -130,6 +130,25 @@ Or edit `~/.merlinrc.json`:
 
 See [Themes](../usage/themes.md) for a comparison of both themes.
 
+### Create a custom theme
+
+Set `theme` to `"custom"` and list only the messages you want to change. Everything else comes from the theme named in `extends`:
+
+```json
+{
+    "theme": "custom",
+    "customTheme": {
+        "extends": "wizard",
+        "messages": {
+            "commit": { "intro": "🚀 Ready to launch your commit!" },
+            "prompts": { "type": "🎯 Select mission type:" }
+        }
+    }
+}
+```
+
+Put it in the project `.merlinrc.json` to share it with your team. See [Custom Themes](../usage/themes.md#custom-themes) for placeholders, limits and every message key.
+
 ### Enable auto-add
 
 When `autoAdd` is true, running `merlin` when no files are staged opens an interactive file picker instead of exiting with an error.
