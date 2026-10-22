@@ -1,0 +1,44 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(npm run lint)",
+            "Bash(npm run lint -- *)",
+            "Bash(npm run format)",
+            "Bash(npm run type-check)",
+            "Bash(npm run knip)",
+            "Bash(npm test)",
+            "Bash(npm run test)",
+            "Bash(npm run test:coverage)",
+            "Bash(npm run build)",
+            "Bash(npx vitest run *)",
+            "Bash(npx tsc --noEmit)",
+            "Bash(npx eslint *)",
+            "Bash(npx prettier *)",
+            "Bash(git status *)",
+            "Bash(git diff *)",
+            "Bash(git log *)",
+            "Bash(git add *)",
+            "Bash(git commit *)",
+            "Bash(git switch -c *)",
+            "Bash(git checkout -b *)"
+        ],
+        "deny": [
+            "Bash(git commit *--no-verify*)",
+            "Bash(git commit * -n*)",
+            "Bash(git commit -n*)",
+            "Bash(git push *--force*)",
+            "Bash(git push -f*)",
+            "Bash(git push * -f*)",
+            "Bash(git push *--no-verify*)",
+            "Bash(git push * main)",
+            "Bash(git push * main *)",
+            "Bash(git push *:main*)",
+            "Bash(git push * develop)",
+            "Bash(git push * develop *)",
+            "Bash(git push *:develop*)",
+            "Bash(git push *+*)",
+            "Read(./.env)",
+            "Read(./.env.*)"
+        ]
+    }
+}
