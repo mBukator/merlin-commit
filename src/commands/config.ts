@@ -660,8 +660,7 @@ async function runProjectConfigMenu(repoRoot: string): Promise<"back" | "exit"> 
         );
 
         const choices: (
-            | { value: ConfigMenuAction; name: string; short?: string }
-            | Separator
+            { value: ConfigMenuAction; name: string; short?: string } | Separator
         )[] = [];
 
         if (configuredFields.length > 0) {
