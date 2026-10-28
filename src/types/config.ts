@@ -89,12 +89,7 @@ export type ConfigOptions = {
  * Covers configurable field names plus navigation/utility actions.
  */
 export type ConfigMenuAction =
-    | ConfigurableField
-    | "show"
-    | "reset"
-    | "syncCommitlint"
-    | "back"
-    | "exit";
+    ConfigurableField | "show" | "reset" | "syncCommitlint" | "back" | "exit";
 
 /**
  * Configurable fields that can appear in the project config menu.
