@@ -230,7 +230,7 @@ The `commit-msg` hook will reject messages that do not follow the format.
 
 The project enforces style automatically via ESLint and Prettier. Run `npm run format` to auto-fix formatting. Key rules:
 
-- TypeScript: `type` preferred over `interface`, no `any`, strict equality (`===`)
+- TypeScript: `type` preferred over `interface`, no `any` in `src/`, strict equality (`===`)
 - 4-space indentation, double quotes, semicolons
 - Named constants for all magic values - no inline strings or numbers
 - Boolean variable names use `is`, `has`, or `can` prefixes

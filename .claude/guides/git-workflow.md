@@ -1,7 +1,5 @@
 # Git Workflow Guide
 
-**Last Updated**: 2026-02-07
-
 Complete guide to the git workflow, branching strategy, commit conventions, and release process for merlin-commit.
 
 ---
@@ -171,7 +169,7 @@ Merlin-commit follows [Conventional Commits](https://www.conventionalcommits.org
 | **perf**     | Performance improvement       | `perf(git): cache git repo check result`                |
 | **test**     | Adding/fixing tests           | `test(validators): add edge case tests`                 |
 | **build**    | Build system changes          | `build: update rollup configuration`                    |
-| **ci**       | CI configuration              | `ci: add Node.js 20 to test matrix`                     |
+| **ci**       | CI configuration              | `ci: run knip in the ci job`                            |
 | **chore**    | Maintenance                   | `chore(deps): upgrade inquirer to v10`                  |
 | **revert**   | Revert previous commit        | `revert: revert "feat: add custom types"`               |
 
@@ -623,13 +621,3 @@ merlin --amend
 # Force push if already pushed
 git push --force-with-lease origin feat/your-feature
 ```
-
----
-
-## Resources
-
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [GitHub Flow](https://guides.github.com/introduction/flow/)
-- [Pro Git Book](https://git-scm.com/book/en/v2)
-- .claude/guides/architecture.md - Architecture overview
-- .claude/guides/development.md - Development setup

@@ -107,7 +107,7 @@ This file tracks all source files, their responsibilities, sizes, and maintenanc
 
 **Total**: 18 files, ~7,152 lines combined
 
-**Coverage Target**: >80% overall, 100% for utils
+**Coverage Target**: `vitest.config.ts` thresholds (80% lines/statements/functions, 75% branches)
 
 ---
 

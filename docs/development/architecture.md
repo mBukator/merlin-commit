@@ -40,8 +40,11 @@ The source code is organized into three layers. Each layer has a specific role a
 ✅ commands → types
 ✅ lib → utils
 ✅ lib → types
+✅ lib → lib (acyclic)
 ✅ lib → external packages (execa, inquirer, chalk, ora)
+✅ utils → utils (acyclic)
 ✅ utils → types
+✅ utils → side-effect-free packages (chalk)
 
 ❌ lib → commands
 ❌ utils → commands
@@ -85,7 +88,7 @@ Each library module implements one domain. It exports a focused set of functions
 - Single responsibility - one domain per module
 - Explicit error handling with descriptive `Error` objects
 - Pure functions where possible
-- No cross-dependencies between library modules
+- Imports between library modules stay acyclic
 
 ### Utilities (Pure Helpers)
 
@@ -96,7 +99,7 @@ Utilities are pure, stateless functions. They have no side effects and produce t
 - No file I/O, network calls, or logging
 - No external state or mutations
 - Always return a value rather than throw (except for genuinely impossible states)
-- 100% test coverage target - pure functions are trivial to test
+- Pure functions are trivial to test, so keep them well covered
 
 ---
 

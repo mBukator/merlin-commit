@@ -1,7 +1,5 @@
 # Architecture Guide
 
-**Last Updated**: 2026-05-11
-
 Complete architecture documentation for merlin-commit, including folder structure, data flow, module relationships, and design patterns.
 
 ---
@@ -212,7 +210,7 @@ type CommitAnswers = {
     issues?: string; // Issue references
 };
 
-// Configuration loaded from ~/.merlinrc.json
+// Configuration merged from ~/.merlinrc.json and <repo-root>/.merlinrc.json
 type MerlinConfig = {
     types?: CommitType[];
     maxSubjectLength?: number;
@@ -291,8 +289,11 @@ External Dependencies:
 ✅ commands → types
 ✅ lib → utils
 ✅ lib → types
+✅ lib → lib (acyclic)
 ✅ lib → external packages
+✅ utils → utils (acyclic)
 ✅ utils → types
+✅ utils → side-effect-free packages (chalk)
 
 ❌ lib → commands (library shouldn't know about orchestration)
 ❌ utils → commands (utils shouldn't know about orchestration)
@@ -475,22 +476,13 @@ export function getMessages(repoRoot?: string | null): ThemeMessages {
 
 ## Module File Size Guidelines
 
-| Category    | Target Size | Current                                                                                 |
-| ----------- | ----------- | --------------------------------------------------------------------------------------- |
-| Commands    | < 150 lines | commit: 176, config: 922, init: 410                                                     |
-| Lib modules | < 300 lines | git: 345, editor: 256, setup: 270, prompt: 223, cfg-ld: 213, cl-sync: 191, terminal: 63 |
-| Utils       | < 200 lines | config: 68, validators: 115, theme: 205, constants: 359                                 |
+| Category    | Target size |
+| ----------- | ----------- |
+| Commands    | < 150 lines |
+| Lib modules | < 300 lines |
+| Utils       | < 200 lines |
 
----
-
-## Code Statistics
-
-| Category      | Files | Total Lines |
-| ------------- | ----- | ----------- |
-| Source code   | 24    | ~4,863      |
-| Test files    | 18    | ~7,152      |
-| Config files  | 9     | -           |
-| Documentation | 17    | -           |
+Current sizes and files over target are tracked in `.claude/maintenance/codebase-map.md`.
 
 ---
 
@@ -552,13 +544,3 @@ export function getMessages(repoRoot?: string | null): ThemeMessages {
 Users can also build custom themes without code changes via `theme: "custom"` and
 `customTheme` in `.merlinrc.json` (see `utils/theme.ts`). Adding a template
 function to `ThemeMessages` requires an entry in `TEMPLATE_PARAMETER_NAMES`.
-
----
-
-## Resources
-
-- .claude/rules/commands.md - Command layer rules
-- .claude/rules/lib.md - Library module rules
-- .claude/rules/utils.md - Utility function rules
-- .claude/guides/git-workflow.md - Git workflow
-- .claude/guides/development.md - Development setup

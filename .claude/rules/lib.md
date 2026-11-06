@@ -5,8 +5,6 @@ paths:
 
 # Library Module Rules
 
-**Last Updated**: 2026-05-11
-
 These rules apply to all library modules in `src/lib/` directory.
 
 ---
@@ -41,11 +39,24 @@ Library modules are **IMPLEMENTERS** - they implement specific domain logic with
 **Exports**:
 
 ```typescript
-export type DetectedCommitlintConfig = { filePath: string; format: CommitlintConfigFormat };
-export type SyncResult = { success: boolean; filePath: string; appliedRuleNames: string[]; manualInstructions?: string };
-export async function detectCommitlintConfig(repoRoot: string): Promise<DetectedCommitlintConfig | null>;
+export type DetectedCommitlintConfig = {
+    filePath: string;
+    format: CommitlintConfigFormat;
+};
+export type SyncResult = {
+    success: boolean;
+    filePath: string;
+    appliedRuleNames: string[];
+    manualInstructions?: string;
+};
+export async function detectCommitlintConfig(
+    repoRoot: string
+): Promise<DetectedCommitlintConfig | null>;
 export function buildSyncRules(config: Required<MerlinConfig>): CommitlintRules;
-export async function syncToCommitlintConfig(config: Required<MerlinConfig>, repoRoot: string): Promise<SyncResult>;
+export async function syncToCommitlintConfig(
+    config: Required<MerlinConfig>,
+    repoRoot: string
+): Promise<SyncResult>;
 ```
 
 **Pattern**: Detects commitlint config format (JS/TS/JSON/YAML), builds rules from MerlinConfig, writes back with format preservation. Returns `manualInstructions` when auto-write is not possible (e.g. dynamic JS configs).
@@ -88,9 +99,15 @@ export async function commit(message: string, noVerify?: boolean): Promise<strin
 export async function amendCommit(message: string, noVerify?: boolean): Promise<string>;
 export async function getGitDirectory(): Promise<string>;
 export async function getRepoRoot(): Promise<string | null>;
-export type StagedFile = { status: "modified" | "new file" | "deleted" | "renamed" | "copied" | "typechange"; path: string };
+export type StagedFile = {
+    status: "modified" | "new file" | "deleted" | "renamed" | "copied" | "typechange";
+    path: string;
+};
 export async function getStagedFilesWithStatus(): Promise<StagedFile[]>;
-export type StagingCandidate = { path: string; status: "modified" | "deleted" | "untracked" | "renamed" | "copied" };
+export type StagingCandidate = {
+    path: string;
+    status: "modified" | "deleted" | "untracked" | "renamed" | "copied";
+};
 export async function getStagingCandidates(): Promise<StagingCandidate[]>;
 ```
 
@@ -125,7 +142,10 @@ export type PromptDependencies = {
     editIssues: () => string;
 };
 export async function promptUser(deps: PromptDependencies): Promise<CommitAnswers>;
-export async function promptFileSelection(candidates: StagingCandidate[], promptMessage: string): Promise<string[]>;
+export async function promptFileSelection(
+    candidates: StagingCandidate[],
+    promptMessage: string
+): Promise<string[]>;
 ```
 
 **Pattern**: Single entry point with injected dependencies for testability. `promptFileSelection` is a standalone function for interactive staging candidate selection used by the auto-add flow.
@@ -286,7 +306,7 @@ Prefer pure functions (no side effects, same input = same output):
 ```typescript
 // GOOD - pure function in message.ts
 export function buildCommitMessage(answers: CommitAnswers): string {
-    const scope = answers.scope ? `(${answers.scope})` : '';
+    const scope = answers.scope ? `(${answers.scope})` : "";
     return `${answers.type}${scope}: ${answers.subject}`;
 }
 
@@ -613,20 +633,12 @@ async function process(input: InputType): Promise<OutputType> {
 - lib → types (type imports only)
 - lib → utils (for validation, formatting)
 - lib → external packages (execa, @inquirer/prompts, etc.)
+- lib → lib (keep it acyclic; prefer `import type` where only types are needed)
 
 **Not Allowed**:
 
 - lib → commands (library shouldn't know about orchestration)
-- lib → lib (minimize cross-dependencies)
 - lib → cli (library shouldn't know about CLI)
 
-**If you need cross-module functionality**: Either extract to utils, or accept as parameter.
-
----
-
-## Resources
-
-- .claude/guides/architecture.md - Full architecture overview
-- .claude/rules/commands.md - Command layer rules
-- .claude/rules/utils.md - Utility function rules
-- .claude/rules/testing.md - Testing guidelines
+**If two lib modules would import each other**: Move the shared piece to `utils/` (if pure) or
+pass it in as a parameter.

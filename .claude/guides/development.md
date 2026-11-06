@@ -1,7 +1,5 @@
 # Development Guide
 
-**Last Updated**: 2026-02-07
-
 Complete development setup, commands, debugging tips, and common gotchas for merlin-commit.
 
 ---
@@ -58,12 +56,12 @@ merlin --version
 
 ```json
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "typescript.tsdk": "node_modules/typescript/lib"
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
 ```
 
@@ -212,8 +210,8 @@ Add debug logs (remove before committing):
 
 ```typescript
 // Temporary debugging
-console.log('Debug:', { variable, otherVariable });
-console.error('Error:', error);
+console.log("Debug:", { variable, otherVariable });
+console.error("Error:", error);
 console.dir(complexObject, { depth: null });
 ```
 
@@ -297,13 +295,14 @@ git commit
 **Don't do**:
 
 ```javascript
-const { commitCommand } = require('./commands/commit');  // ❌
+const { commitCommand } = require("./commands/commit"); // ❌
 ```
 
 **Do**:
 
 ```typescript
-import { commitCommand } from './commands/commit.js';  // ✅
+import { commitCommand } from "./commands/commit.js"; // ✅
+
 // Note: .js extension required for ESM
 ```
 
@@ -314,13 +313,14 @@ import { commitCommand } from './commands/commit.js';  // ✅
 **Don't do**:
 
 ```typescript
-import { commit } from './lib/git';  // ❌
+import { commit } from "./lib/git"; // ❌
 ```
 
 **Do**:
 
 ```typescript
-import { commit } from './lib/git.js';  // ✅
+import { commit } from "./lib/git.js"; // ✅
+
 // TypeScript compiler resolves .ts file
 ```
 
@@ -331,13 +331,13 @@ import { commit } from './lib/git.js';  // ✅
 **Don't do**:
 
 ```typescript
-import execa from 'execa';  // ❌
+import execa from "execa"; // ❌
 ```
 
 **Do**:
 
 ```typescript
-import { execa } from 'execa';  // ✅
+import { execa } from "execa"; // ✅
 ```
 
 ### 4. Testing Async Functions
@@ -347,37 +347,34 @@ import { execa } from 'execa';  // ✅
 **Don't do**:
 
 ```typescript
-it('should commit', () => {
-  commit('message');  // ❌ Missing await
-  expect(something).toBe(true);
+it("should commit", () => {
+    commit("message"); // ❌ Missing await
+    expect(something).toBe(true);
 });
 ```
 
 **Do**:
 
 ```typescript
-it('should commit', async () => {
-  await commit('message');  // ✅
-  expect(something).toBe(true);
+it("should commit", async () => {
+    await commit("message"); // ✅
+    expect(something).toBe(true);
 });
 ```
 
 ### 5. Mock Placement
 
-**Issue**: Mocks must be before imports
+**Issue**: A `vi.mock` factory throws because a variable it uses is undefined
 
-**Don't do**:
+**Reason**: Vitest hoists every `vi.mock` call above the imports, so its position in the file does
+not matter, but the factory runs before ordinary top-level variables are initialized.
 
-```typescript
-import { commit } from '../src/lib/git.js';
-vi.mock('../src/lib/git.js');  // ❌ Too late!
-```
-
-**Do**:
+**Do**: Create anything the factory needs with `vi.hoisted`:
 
 ```typescript
-vi.mock('../src/lib/git.js');  // ✅ Before imports
-import { commit } from '../src/lib/git.js';
+const { mockCommit } = vi.hoisted(() => ({ mockCommit: vi.fn() }));
+
+vi.mock("../src/lib/git.js", () => ({ commit: mockCommit }));
 ```
 
 ### 6. Chalk and Colors
@@ -390,10 +387,10 @@ import { commit } from '../src/lib/git.js';
 
 ```typescript
 // ❌ Don't test ANSI codes
-expect(output).toContain('\x1b[32m');
+expect(output).toContain("\x1b[32m");
 
 // ✅ Test actual content
-expect(output).toContain('Success');
+expect(output).toContain("Success");
 ```
 
 ### 7. Path Separators
@@ -403,14 +400,15 @@ expect(output).toContain('Success');
 **Don't do**:
 
 ```typescript
-const configPath = `${homeDir}/.merlinrc.json`;  // ❌ Breaks on Windows
+const configPath = `${homeDir}/.merlinrc.json`; // ❌ Breaks on Windows
 ```
 
 **Do**:
 
 ```typescript
-import path from 'path';
-const configPath = path.join(homeDir, '.merlinrc.json');  // ✅
+import path from "path";
+
+const configPath = path.join(homeDir, ".merlinrc.json"); // ✅
 ```
 
 ---
@@ -517,7 +515,7 @@ npx vitest run tests/unit/validators.test.ts
 npm run test  # Runs tests in parallel
 
 # Skip slow tests during development
-it.skip('slow test', () => {  });
+it.skip("slow test", () => {});
 ```
 
 ---
@@ -540,27 +538,4 @@ SKIP_HOOKS=1 merlin
 
 ## Release Checklist
 
-Before releasing new version:
-
-- [ ] All tests pass
-- [ ] No console.logs in code
-- [ ] README.md updated
-- [ ] CHANGELOG.md updated
-- [ ] Version bumped in package.json
-- [ ] npm audit passes
-- [ ] Build succeeds
-- [ ] CLI works locally (`npm link`)
-- [ ] Documentation updated
-- [ ] Examples tested
-
----
-
-## Resources
-
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Vitest Documentation](https://vitest.dev/)
-- [Commander.js Documentation](https://github.com/tj/commander.js)
-- [Inquirer Documentation](https://github.com/SBoudrias/Inquirer.js)
-- .claude/guides/architecture.md - Architecture overview
-- .claude/guides/git-workflow.md - Git workflow
+See `docs/development/releases.md`.
