@@ -5,8 +5,6 @@ paths:
 
 # Utility Function Rules
 
-**Last Updated**: 2026-03-13
-
 These rules apply to all utility modules in `src/utils/` directory.
 
 ---
@@ -131,10 +129,21 @@ export const MAX_CUSTOM_MESSAGE_LENGTH_CHARACTERS: number;
 
 ```typescript
 export type MessageTemplate = (...templateArguments: unknown[]) => string;
-export function resolveBaseTheme(config: Pick<Required<MerlinConfig>, "theme" | "customTheme">): BaseThemeName;
-export function validateThemeOverrides(rawOverrides: unknown, reference: ThemeMessages): ThemeMessageOverrides;
-export function compileMessageTemplate(template: string, parameterNames: readonly string[]): MessageTemplate;
-export function mergeThemeMessages(base: ThemeMessages, overrides: ThemeMessageOverrides): ThemeMessages;
+export function resolveBaseTheme(
+    config: Pick<Required<MerlinConfig>, "theme" | "customTheme">
+): BaseThemeName;
+export function validateThemeOverrides(
+    rawOverrides: unknown,
+    reference: ThemeMessages
+): ThemeMessageOverrides;
+export function compileMessageTemplate(
+    template: string,
+    parameterNames: readonly string[]
+): MessageTemplate;
+export function mergeThemeMessages(
+    base: ThemeMessages,
+    overrides: ThemeMessageOverrides
+): ThemeMessages;
 ```
 
 **Note**: Validation walks the built-in theme shape, so unknown keys are dropped without an allow-list. Template strings use `{placeholder}` substitution only - never evaluated.
@@ -148,7 +157,10 @@ export function mergeThemeMessages(base: ThemeMessages, overrides: ThemeMessageO
 ```typescript
 export function createRangeValidator(min: number, max: number): Validator;
 export function createNonEmptyValidator(fieldName?: string): Validator;
-export function createMaxLengthValidator(maxLength: number, fieldName?: string): Validator;
+export function createMaxLengthValidator(
+    maxLength: number,
+    fieldName?: string
+): Validator;
 export function createPatternValidator(pattern: RegExp, errorMessage: string): Validator;
 export function composeValidators(...validators: Validator[]): Validator;
 ```
@@ -249,8 +261,6 @@ describe("composeValidators", () => {
 });
 ```
 
-**Target: 100% coverage for utils** - they're pure functions, so full coverage is achievable and valuable.
-
 ---
 
 ## Util Function Template
@@ -346,8 +356,8 @@ export const MAX_LENGTH = loadConfig().maxSubjectLength; // Side effect!
 **Allowed**:
 
 - utils → types (type imports)
-- utils → other utils (sparingly)
-- utils → external pure libraries (lodash, date-fns)
+- utils → other utils (keep it acyclic)
+- utils → side-effect-free packages (e.g. `chalk` in `constants.ts`)
 
 **Not Allowed**:
 
@@ -498,25 +508,15 @@ const answer = await input({ message: "Subject:", validate: subjectValidator });
 
 ## Testing Coverage
 
-**Target: 100% coverage for utils**
-
-Since utils are pure functions with no side effects, achieving 100% coverage is straightforward and valuable.
+Utils share the project thresholds in `vitest.config.ts`. They are pure, so gaps are cheap to
+close:
 
 ```bash
 npm run test:coverage -- tests/unit/validators.test.ts
 ```
 
-If coverage is < 100%, ask:
+If a util has uncovered lines, ask:
 
 - Are there untested edge cases?
 - Is the function too complex? (Should it be split?)
 - Are there unreachable code paths? (Dead code to remove?)
-
----
-
-## Resources
-
-- [Pure Functions (FP)](https://en.wikipedia.org/wiki/Pure_function)
-- [Functional Programming in TypeScript](https://github.com/gcanti/fp-ts)
-- .claude/rules/code-style.md - Code style rules
-- .claude/rules/testing.md - Testing guidelines

@@ -48,7 +48,7 @@ Run coverage:
 npm run test:coverage
 ```
 
-Coverage thresholds are enforced in CI. A PR that drops below target will fail.
+`npm run test:coverage` fails when coverage drops below these thresholds. CI does not run coverage, so run it locally before opening a PR.
 
 ---
 

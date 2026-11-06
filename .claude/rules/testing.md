@@ -1,11 +1,9 @@
 ---
 paths:
-  - "tests/**/*.test.ts"
+    - "tests/**/*.test.ts"
 ---
 
 # Testing Guidelines
-
-**Last Updated**: 2026-02-07
 
 These guidelines apply to all test files in the `tests/` directory.
 
@@ -84,13 +82,13 @@ Examples:
 Use the **Arrange-Act-Assert** pattern with nested `describe` blocks:
 
 ```typescript
-describe('ModuleName', () => {
-    describe('functionName', () => {
-        describe('when condition', () => {
-            it('should expected behavior', () => {
+describe("ModuleName", () => {
+    describe("functionName", () => {
+        describe("when condition", () => {
+            it("should expected behavior", () => {
                 // Arrange - Set up test data and dependencies
-                const input = 'test value';
-                const expected = 'expected result';
+                const input = "test value";
+                const expected = "expected result";
 
                 // Act - Execute the function
                 const result = functionName(input);
@@ -106,37 +104,37 @@ describe('ModuleName', () => {
 **Example from merlin-commit:**
 
 ```typescript
-describe('buildCommitMessage', () => {
-    describe('when scope is provided', () => {
-        it('should include scope in parentheses', () => {
+describe("buildCommitMessage", () => {
+    describe("when scope is provided", () => {
+        it("should include scope in parentheses", () => {
             // Arrange
             const answers: CommitAnswers = {
-                type: 'feat',
-                scope: 'api',
-                subject: 'add user endpoint'
+                type: "feat",
+                scope: "api",
+                subject: "add user endpoint",
             };
 
             // Act
             const message = buildCommitMessage(answers);
 
             // Assert
-            expect(message).toBe('feat(api): add user endpoint');
+            expect(message).toBe("feat(api): add user endpoint");
         });
     });
 
-    describe('when scope is not provided', () => {
-        it('should omit scope from message', () => {
+    describe("when scope is not provided", () => {
+        it("should omit scope from message", () => {
             // Arrange
             const answers: CommitAnswers = {
-                type: 'fix',
-                subject: 'resolve bug'
+                type: "fix",
+                subject: "resolve bug",
             };
 
             // Act
             const message = buildCommitMessage(answers);
 
             // Assert
-            expect(message).toBe('fix: resolve bug');
+            expect(message).toBe("fix: resolve bug");
         });
     });
 });
@@ -161,18 +159,18 @@ export function validateSubjectLength(
 }
 
 // tests/unit/validators.test.ts
-describe('validateSubjectLength', () => {
-    it('should return valid for short subjects', () => {
-        const result = validateSubjectLength('short', 72);
+describe("validateSubjectLength", () => {
+    it("should return valid for short subjects", () => {
+        const result = validateSubjectLength("short", 72);
         expect(result.valid).toBe(true);
     });
 
-    it('should return invalid for long subjects', () => {
-        const longSubject = 'a'.repeat(100);
+    it("should return invalid for long subjects", () => {
+        const longSubject = "a".repeat(100);
         const result = validateSubjectLength(longSubject, 72);
 
         expect(result.valid).toBe(false);
-        expect(result.error).toContain('exceeds 72 characters');
+        expect(result.error).toContain("exceeds 72 characters");
     });
 });
 ```
@@ -184,29 +182,30 @@ describe('validateSubjectLength', () => {
 ### Mocking Git Operations
 
 ```typescript
-import { vi } from 'vitest';
-import { execa } from 'execa';
-import { commit } from '../src/lib/git';
+import { execa } from "execa";
+import { vi } from "vitest";
+
+import { commit } from "../src/lib/git";
 
 // Mock execa
-vi.mock('execa');
+vi.mock("execa");
 
-describe('commit', () => {
-    it('should call git commit with correct arguments', async () => {
+describe("commit", () => {
+    it("should call git commit with correct arguments", async () => {
         // Arrange
-        const message = 'feat: add feature';
+        const message = "feat: add feature";
         const mockExeca = vi.mocked(execa);
         mockExeca.mockResolvedValue({
-            stdout: 'abc123 feat: add feature',
-            stderr: '',
-            exitCode: 0
+            stdout: "abc123 feat: add feature",
+            stderr: "",
+            exitCode: 0,
         } as any);
 
         // Act
         await commit(message, { noVerify: false, amend: false });
 
         // Assert
-        expect(mockExeca).toHaveBeenCalledWith('git', ['commit', '-m', message]);
+        expect(mockExeca).toHaveBeenCalledWith("git", ["commit", "-m", message]);
     });
 });
 ```
@@ -214,16 +213,17 @@ describe('commit', () => {
 ### Mocking File System
 
 ```typescript
-import { vi } from 'vitest';
-import * as fs from 'fs';
-import { loadConfig } from '../src/utils/config';
+import * as fs from "fs";
+import { vi } from "vitest";
 
-vi.mock('fs');
+import { loadConfig } from "../src/utils/config";
 
-describe('loadConfig', () => {
-    it('should load config from file', () => {
+vi.mock("fs");
+
+describe("loadConfig", () => {
+    it("should load config from file", () => {
         // Arrange
-        const mockConfig = { theme: 'wizard', maxSubjectLength: 72 };
+        const mockConfig = { theme: "wizard", maxSubjectLength: 72 };
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockConfig));
 
         // Act
@@ -241,9 +241,8 @@ describe('loadConfig', () => {
 
 ### Target Coverage
 
-- **Overall**: >80%
-- **Critical paths**: 100% (security, git operations, validation)
-- **Utils**: 100% (they're pure functions, easy to test)
+The thresholds in `vitest.config.ts` are the rule: 80% lines, statements and functions, 75%
+branches. `npm run test:coverage` fails below them; CI does not run coverage.
 
 ### Don't Chase 100%
 
@@ -264,38 +263,38 @@ npm run test:coverage
 Commands coordinate workflows, so focus on testing the coordination logic.
 
 ```typescript
-describe('commitCommand', () => {
+describe("commitCommand", () => {
     beforeEach(() => {
         // Mock dependencies
-        vi.mock('../src/lib/git');
-        vi.mock('../src/lib/prompt');
-        vi.mock('../src/lib/message');
+        vi.mock("../src/lib/git");
+        vi.mock("../src/lib/prompt");
+        vi.mock("../src/lib/message");
     });
 
-    it('should throw error when not in git repo', async () => {
+    it("should throw error when not in git repo", async () => {
         // Arrange
         vi.mocked(isGitRepo).mockResolvedValue(false);
 
         // Act & Assert
-        await expect(commitCommand({})).rejects.toThrow('Not a git repository');
+        await expect(commitCommand({})).rejects.toThrow("Not a git repository");
     });
 
-    it('should create commit when user confirms', async () => {
+    it("should create commit when user confirms", async () => {
         // Arrange
         vi.mocked(isGitRepo).mockResolvedValue(true);
         vi.mocked(hasStagedChanges).mockResolvedValue(true);
         vi.mocked(promptUser).mockResolvedValue({
-            type: 'feat',
-            subject: 'add feature'
+            type: "feat",
+            subject: "add feature",
         });
-        vi.mocked(buildCommitMessage).mockReturnValue('feat: add feature');
+        vi.mocked(buildCommitMessage).mockReturnValue("feat: add feature");
         vi.mocked(confirm).mockResolvedValue(true);
 
         // Act
         await commitCommand({});
 
         // Assert
-        expect(commit).toHaveBeenCalledWith('feat: add feature', {});
+        expect(commit).toHaveBeenCalledWith("feat: add feature", {});
     });
 });
 ```
@@ -307,23 +306,23 @@ describe('commitCommand', () => {
 Lib modules implement domain logic. Test the logic, mock external dependencies.
 
 ```typescript
-describe('buildCommitMessage', () => {
-    it('should format message with all components', () => {
+describe("buildCommitMessage", () => {
+    it("should format message with all components", () => {
         const answers: CommitAnswers = {
-            type: 'feat',
-            scope: 'api',
-            subject: 'add endpoint',
-            body: 'Detailed description',
-            breaking: 'BREAKING CHANGE: API changed',
-            issues: 'Closes #123'
+            type: "feat",
+            scope: "api",
+            subject: "add endpoint",
+            body: "Detailed description",
+            breaking: "BREAKING CHANGE: API changed",
+            issues: "Closes #123",
         };
 
         const message = buildCommitMessage(answers);
 
-        expect(message).toContain('feat(api): add endpoint');
-        expect(message).toContain('Detailed description');
-        expect(message).toContain('BREAKING CHANGE: API changed');
-        expect(message).toContain('Closes #123');
+        expect(message).toContain("feat(api): add endpoint");
+        expect(message).toContain("Detailed description");
+        expect(message).toContain("BREAKING CHANGE: API changed");
+        expect(message).toContain("Closes #123");
     });
 });
 ```
@@ -335,14 +334,14 @@ describe('buildCommitMessage', () => {
 Utils must be pure functions, so tests are straightforward.
 
 ```typescript
-describe('validators', () => {
-    describe('validateSubjectLength', () => {
+describe("validators", () => {
+    describe("validateSubjectLength", () => {
         it.each([
-            ['valid short subject', 'short', 72, true],
-            ['valid at max length', 'a'.repeat(72), 72, true],
-            ['invalid over max length', 'a'.repeat(73), 72, false],
-            ['valid empty', '', 72, true],
-        ])('%s', (_, subject, maxLength, expectedValid) => {
+            ["valid short subject", "short", 72, true],
+            ["valid at max length", "a".repeat(72), 72, true],
+            ["invalid over max length", "a".repeat(73), 72, false],
+            ["valid empty", "", 72, true],
+        ])("%s", (_, subject, maxLength, expectedValid) => {
             const result = validateSubjectLength(subject, maxLength);
             expect(result.valid).toBe(expectedValid);
         });
@@ -357,21 +356,21 @@ describe('validators', () => {
 ### Testing Async Functions
 
 ```typescript
-it('should resolve with result', async () => {
+it("should resolve with result", async () => {
     const result = await asyncFunction();
     expect(result).toBe(expected);
 });
 
-it('should reject with error', async () => {
-    await expect(asyncFunction()).rejects.toThrow('Error message');
+it("should reject with error", async () => {
+    await expect(asyncFunction()).rejects.toThrow("Error message");
 });
 ```
 
 ### Testing Error Conditions
 
 ```typescript
-it('should throw error for invalid input', () => {
-    expect(() => functionName(invalidInput)).toThrow('Invalid input');
+it("should throw error for invalid input", () => {
+    expect(() => functionName(invalidInput)).toThrow("Invalid input");
 });
 ```
 
@@ -379,10 +378,10 @@ it('should throw error for invalid input', () => {
 
 ```typescript
 it.each([
-    ['input1', 'output1'],
-    ['input2', 'output2'],
-    ['input3', 'output3'],
-])('should handle %s correctly', (input, expected) => {
+    ["input1", "output1"],
+    ["input2", "output2"],
+    ["input3", "output3"],
+])("should handle %s correctly", (input, expected) => {
     const result = functionName(input);
     expect(result).toBe(expected);
 });
@@ -391,7 +390,7 @@ it.each([
 ### Setup and Teardown
 
 ```typescript
-describe('functionName', () => {
+describe("functionName", () => {
     beforeEach(() => {
         // Runs before each test
     });
@@ -490,16 +489,8 @@ npx vitest run -t "should format message"
 - Check mock is properly typed
 - Verify mock path is correct
 
-### Coverage Not 100%
+### Coverage Below Threshold
 
-- Don't worry about it
+- Run `npm run test:coverage` and cover the reported lines that matter
 - Focus on critical paths
 - Some code is hard to test meaningfully
-
----
-
-## Resources
-
-- [Vitest Documentation](https://vitest.dev/)
-- [Testing JavaScript](https://testingjavascript.com/)
-- [Test-Driven Development](https://martinfowler.com/bliki/TestDrivenDevelopment.html)

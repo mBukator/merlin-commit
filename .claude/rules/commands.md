@@ -5,8 +5,6 @@ paths:
 
 # Command Layer Rules
 
-**Last Updated**: 2026-02-07
-
 These rules apply to all command files in `src/commands/` directory.
 
 ---
@@ -188,8 +186,8 @@ if (!validateSubjectLength(subject, maxLength)) {
 ## Command Structure Template
 
 ```typescript
-import {} from /* dependencies */ "../lib/...";
-import {} from /* types */ "../types";
+import { someLibFunction } from "../lib/some-module.js";
+import type { CommandOptions } from "../types/index.js";
 
 /**
  * Brief description of what this command does.
@@ -416,11 +414,3 @@ program
     .description("Description of new command")
     .action(newCommand);
 ```
-
----
-
-## Resources
-
-- .claude/guides/architecture.md - Full architecture overview
-- .claude/rules/lib.md - Library module rules
-- .claude/rules/testing.md - Testing guidelines
